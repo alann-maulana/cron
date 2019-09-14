@@ -10,12 +10,12 @@ typedef Future Task();
 /// A cron-like time-based job scheduler.
 abstract class Cron {
   /// A cron-like time-based job scheduler.
-  factory Cron() => new _Cron();
+  factory Cron() => _Cron();
 
   /// Schedules a [task] running specified by the [schedule].
   ScheduledTask schedule(Schedule schedule, Task task);
 
-  /// Closes the cron instance and doesn't accept new tasks anymore.
+  /// Closes the cron instance and doesn't accept tasks anymore.
   Future close();
 }
 
@@ -71,16 +71,16 @@ class Schedule {
         ?.map((x) => x == 0 ? 7 : x)
         ?.toSet()
         ?.toList();
-    return new Schedule._(
+    return Schedule._(
         parsedMinutes, parsedHours, parsedDays, parsedMonths, parsedWeekdays);
   }
 
   /// Parses the cron-formatted text and creates a schedule out of it.
   factory Schedule.parse(String cronFormat) {
     List<List<int>> p =
-        cronFormat.split(new RegExp('\\s+')).map(_parseConstraint).toList();
+        cronFormat.split(RegExp('\\s+')).map(_parseConstraint).toList();
     assert(p.length == 5);
-    return new Schedule._(p[0], p[1], p[2], p[3], p[4]);
+    return Schedule._(p[0], p[1], p[2], p[3], p[4]);
   }
 
   Schedule._(this.minutes, this.hours, this.days, this.months, this.weekdays);
@@ -101,7 +101,7 @@ class _Cron implements Cron {
   @override
   ScheduledTask schedule(Schedule schedule, Task task) {
     if (_closed) throw 'Closed.';
-    final st = new _ScheduledTask(schedule, task);
+    final st = _ScheduledTask(schedule, task);
     _schedules.add(st);
     _scheduleNextTick();
     return st;
@@ -120,15 +120,15 @@ class _Cron implements Cron {
   void _scheduleNextTick() {
     if (_closed) return;
     if (_timer != null || _schedules.isEmpty) return;
-    DateTime now = new DateTime.now();
+    DateTime now = DateTime.now();
     int ms = _millisecondsPerMinute -
         (now.millisecondsSinceEpoch % _millisecondsPerMinute);
-    _timer = new Timer(new Duration(milliseconds: ms), _tick);
+    _timer = Timer(Duration(milliseconds: ms), _tick);
   }
 
   void _tick() {
     _timer = null;
-    DateTime now = new DateTime.now();
+    DateTime now = DateTime.now();
     for (_ScheduledTask schedule in _schedules) {
       schedule.tick(now);
     }
@@ -156,7 +156,7 @@ List<int> _parseConstraint(dynamic constraint) {
     if (constraint.startsWith('*/')) {
       int period = int.tryParse(constraint.substring(2)) ?? -1;
       if (period > 0) {
-        return new List.generate(120 ~/ period, (i) => i * period);
+        return List.generate(120 ~/ period, (i) => i * period);
       }
     }
 
@@ -166,7 +166,7 @@ List<int> _parseConstraint(dynamic constraint) {
         int lower = int.tryParse(ranges.first) ?? -1;
         int higher = int.tryParse(ranges.last) ?? -1;
         if (lower <= higher) {
-          return new List.generate(higher - lower + 1, (i) => i + lower);
+          return List.generate(higher - lower + 1, (i) => i + lower);
         }
       }
     }
@@ -201,8 +201,8 @@ class _ScheduledTask implements ScheduledTask {
       _overrun = true;
       return;
     }
-    _running = new Future.microtask(() => _task())
-        .then((_) => null, onError: (_) => null);
+    _running =
+        Future.microtask(() => _task()).then((_) => null, onError: (_) => null);
     _running.whenComplete(() {
       _running = null;
       if (_overrun) {
