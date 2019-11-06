@@ -15,7 +15,7 @@ abstract class Cron {
   /// Schedules a [task] running specified by the [schedule].
   ScheduledTask schedule(Schedule schedule, Task task);
 
-  /// Closes the cron instance and doesn't accept tasks anymore.
+  /// Closes the cron instance and doesn't accept new tasks anymore.
   Future close();
 }
 
